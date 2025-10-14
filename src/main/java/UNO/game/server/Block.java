@@ -1,4 +1,4 @@
-package com.example.demo;
+package UNO.game.server;
 
 import java.util.HashMap;
 

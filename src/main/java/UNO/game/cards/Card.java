@@ -1,0 +1,81 @@
+package UNO.game.cards;
+
+import java.util.List;
+
+public class Card {
+  public final static List<String> COLORS = List.of("red", "blue", "yellow", "green", "any");
+  public final static List<String> TYPES = List.of("number", "skip", "add", "reverse");
+  public final static List<String> SPECIAL = List.of("add", "change");
+
+  private String color = "";
+  private String type = "";
+  private int value = 0;
+  private String status = "deck";
+
+  public Card(String color, String type, int value) {
+    this.color = color;
+    this.type = type;
+    this.value = value;
+  }
+
+  public Card(String color, int value) {
+    this.color = color;
+    this.type = "number";
+    this.value = value;
+  }
+
+  public Card(String color, String type) {
+    this.color = color;
+    this.type = type;
+
+    if (type.equals("add")) {
+      this.value = 2;
+    }
+  }
+
+  public Card(String type) {
+    this.color = "any";
+  }
+
+  public Card(Card card) {
+    this.color = card.getColor();
+    this.type = card.getType();
+    this.value = card.getValue();
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public void setColor(String color) {
+    this.color = color;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  public void setValue(int value) {
+    this.value = value;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public String string() {
+    return "{ color: " + color + ", type: " + type + ", value: " + value + " }";
+  }
+}
