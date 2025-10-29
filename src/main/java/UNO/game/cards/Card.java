@@ -40,6 +40,7 @@ public class Card {
 
   public Card(String type) {
     this.color = "any";
+    this.type = type;
   }
 
   public Card(Card card) {

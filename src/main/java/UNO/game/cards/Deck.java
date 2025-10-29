@@ -71,4 +71,19 @@ public class Deck implements CardContainer {
   public void addCard(Card card) {
     cards.add(card);
   }
+
+  public boolean isValidPlay(Card card) {
+    Card top = cards.get(cards.size() - 1);
+
+    if (card.getColor().equals("any")) {
+      return true;
+    }
+    if (card.getType().equals("number") && card.getValue() == top.getValue()) {
+      return true;
+    }
+    if (card.getColor().equals(top.getColor())) {
+      return true;
+    }
+    return false;
+  }
 }
