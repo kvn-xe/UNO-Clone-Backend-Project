@@ -7,6 +7,7 @@ public class Card {
   public final static String SKIP = "skip";
   public final static String ADD = "add";
   public final static String REVERSE = "reverse";
+  public final static String CHANGE = "change";
 
   public final static List<String> COLORS = List.of("red", "blue", "yellow", "green", "any");
   public final static List<String> TYPES = List.of("number", "skip", "add", "reverse");
