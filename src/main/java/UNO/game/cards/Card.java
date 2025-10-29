@@ -3,6 +3,11 @@ package UNO.game.cards;
 import java.util.List;
 
 public class Card {
+  public final static String NUMBER = "number";
+  public final static String SKIP = "skip";
+  public final static String ADD = "add";
+  public final static String REVERSE = "reverse";
+
   public final static List<String> COLORS = List.of("red", "blue", "yellow", "green", "any");
   public final static List<String> TYPES = List.of("number", "skip", "add", "reverse");
   public final static List<String> SPECIAL = List.of("add", "change");
@@ -41,6 +46,10 @@ public class Card {
     this.color = card.getColor();
     this.type = card.getType();
     this.value = card.getValue();
+  }
+
+  public void discard() {
+    this.status = "discard";
   }
 
   public String getColor() {

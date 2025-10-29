@@ -1,12 +1,14 @@
 package UNO.game.cards;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class Deck {
+public class Deck implements CardContainer {
 
   private final int STANDARD_MULTI = 2;
-  private final int SPECIAL_MULTI = 4;
+  private final int
+   SPECIAL_MULTI = 4;
 
   private List<Card> cards = new ArrayList<>();
 
@@ -51,5 +53,22 @@ public class Deck {
       res += card.string() + "\n";
     }
     return res += "[End of Deck]";
+  }
+
+  public void addCards(Collection<Card> newCards) {
+    cards.addAll(newCards);
+  }
+
+  @Override
+  public Card removeCard(Card card) {
+    if (!cards.remove(card)) {
+      throw new Error("Card doesn't Exist");
+    }
+    return card;
+  }
+
+  @Override
+  public void addCard(Card card) {
+    cards.add(card);
   }
 }
