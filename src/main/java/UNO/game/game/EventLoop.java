@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import UNO.game.game.Events.GameEvent;
-import UNO.game.log.GameLog;
 import UNO.game.user.Player;
 
 public class EventLoop extends Thread {
@@ -43,7 +42,6 @@ public class EventLoop extends Thread {
         // Run through Events
         GameEvent event = eventStack.poll();
         List<GameEvent> nextEvents = event.play();
-        GameLog.logEventOccurence(event);
 
         if (nextEvents == null) {
           terminate();
