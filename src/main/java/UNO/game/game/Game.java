@@ -2,7 +2,6 @@ package UNO.game.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -11,26 +10,30 @@ import UNO.game.cards.Deck;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Events.EventFactory;
 import UNO.game.game.Events.GameEvent;
+import UNO.game.log.GameLog;
 import UNO.game.turn.Turn;
 import UNO.game.user.Player;
 
 public class Game {
 
   private static final int PLAYER_TIMEOUT = 10;
+  private static final int START_HAND = 5;
   
   private Deck deck = null;
   private DiscardPile pile = null;
   private HashMap<String, Player> players;
-  private List<String> playerOrder;
 
-  private String gameState = null;
-  private Player activePlayer = null;
+
+  private String gameState = "ready";
   private PriorityQueue<GameEvent> eventStack = null;
   private PriorityQueue<GameEvent> nextEventStack = null;
   private PriorityQueue<GameEvent> universalEventStack = null;
 
   private EventFactory eventFactory = null;
   private Turn turnManager = null;
+  private EventLoop loop;
+
+  private int maxTurns;
 
   public Game() {
     deck = new Deck();
@@ -42,28 +45,67 @@ public class Game {
     universalEventStack = new PriorityQueue<>(GameEvent.eventComparator);
 
     eventFactory = new EventFactory(this);
+    GameLog.startLog();
+  }
+
+  public Game(int maxTurns) {
+    deck = new Deck();
+    pile = new DiscardPile();
+    players = new HashMap<>();
+
+    eventStack = new PriorityQueue<>(GameEvent.eventComparator);
+    nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
+    universalEventStack = new PriorityQueue<>(GameEvent.eventComparator);
+
+    eventFactory = new EventFactory(this);
+    this.maxTurns = maxTurns;
+    GameLog.startLog();
+  }
+
+  public void giveHands() {
+    for (Player player : players.values()) {
+      player.draw(START_HAND);
+    }
   }
 
   public synchronized void start() {
-    playerOrder = new ArrayList<>(players.keySet());
-    Collections.shuffle(playerOrder);
-
-    turnManager = new Turn(players.size());
+    giveHands();
+    turnManager = new Turn(players);
+    gameState = "Game Started";
+    
     while (!gameState.equals("Game Over")) {
-      activePlayer = players.get(playerOrder.get((turnManager.getTurn()) % (players.size())));
+      if (turnManager.getTurnNum() == maxTurns) {
+        break;
+      }
 
-      EventLoop thread = new EventLoop(this);
-      thread.run();
+      Player activePlayer = turnManager.getActivePlayer();
+      gameState = "Turn " + turnManager.getTurnNum();
+
+      GameLog.logPlayerTurn(activePlayer);
+      turnManager.nextTurn();
+
+      loop = new EventLoop(this);
+      Thread thread = new Thread(loop);
+      thread.start();
 
       long start = System.currentTimeMillis();
       while ((System.currentTimeMillis() - start) < PLAYER_TIMEOUT * 1000) {
+        if (loop.hasEnded()) {
+          break;
+        }
+
         try {
           wait(500);
         } catch (Exception e) {
-          break;
         }
       }
-      thread.terminate();
+
+      loop.terminate();
+      try {
+        thread.join();
+      } catch (Exception e) {
+        System.out.println("EventLoop Thread Interrupted");
+      }
 
       eventStack = nextEventStack;
       nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
@@ -71,7 +113,10 @@ public class Game {
   }
 
   public Player getActivePlayer() {
-    return activePlayer;
+    if (turnManager == null) {
+      return null;
+    }
+    return turnManager.getActivePlayer();
   }
 
   public synchronized void addNextEvent(GameEvent event) {
@@ -86,7 +131,12 @@ public class Game {
     if (event == null) {
       return;
     }
-    eventStack.add(event);
+
+    if (loop != null) {
+      loop.addCurrentEvent(event);
+    } else {
+      eventStack.add(event);
+    }
     return;
   }
 
@@ -101,7 +151,7 @@ public class Game {
   }
 
   public PriorityQueue<GameEvent> getEventStack() {
-    return eventStack;
+    return new PriorityQueue<>(eventStack);
   }
 
   public PriorityQueue<GameEvent> getNextEventStack() {
@@ -112,6 +162,10 @@ public class Game {
     return universalEventStack;
   }
 
+  public String getState() {
+    return gameState;
+  }
+
   public Deck getDeck() {
     return deck;
   }
@@ -120,16 +174,28 @@ public class Game {
     return turnManager;
   }
 
-  public List<String> getPlayerOrder() {
-    return new ArrayList<>(playerOrder);
+  public void setActivePlayer(Player player) {
+    turnManager.setActivePlayer(player);
   }
 
-  public void setPlayerOrder(List<String> playerOrder) {
-    this.playerOrder = playerOrder;
+  public List<Player> getPlayersInOrder() {
+    return new ArrayList<>(turnManager.getPlayerOrder());
+  }
+
+  public void setPlayerOrder(List<Player> playerOrder) {
+    turnManager.setPlayerOrder(playerOrder);
   }
 
   public DiscardPile getDiscard() {
     return pile;
+  }
+
+  public void addPlayer(Player player) {
+    players.put(player.getId(), player);
+  }
+
+  public void removePlayer(Player player) {
+    players.remove(player.getId());
   }
 
   public String logGameState() {
