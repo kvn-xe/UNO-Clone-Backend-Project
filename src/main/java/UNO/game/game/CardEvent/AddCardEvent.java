@@ -17,7 +17,7 @@ public class AddCardEvent extends CardEvent {
   @Override
   public List<GameEvent> play() {
     List<GameEvent> res = super.play();
-    res.add(getGame().getEventFactory().createEvent(getCard()));
+    res.add(getGame().getEventFactory().createEvent(GameEvent.ADD, getCard().getValue()));
     return res;
   }
 }
