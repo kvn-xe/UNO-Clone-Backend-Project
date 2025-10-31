@@ -51,6 +51,6 @@ public class DiscardPile implements CardContainer {
 
   @Override
   public int getNumCards() {
-    return pile.size()
+    return pile.size();
   }
 }
