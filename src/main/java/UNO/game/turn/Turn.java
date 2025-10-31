@@ -11,6 +11,7 @@ public class Turn {
 
   private int turnNum = 0;
   private int turn = 0;
+  private boolean skip = false;
 
   private List<Player> playerOrder;
   private HashMap<String, Player> players;
@@ -25,15 +26,20 @@ public class Turn {
   public void nextTurn() {
     turnNum++;
     turn++;
+    
+    if (skip) {
+      turn++;
+      skip = false;
+    }
   }
 
   public void reverse() {
-    turn = players.size() - (turn % players.size());
+    turn = players.size() - 1 - (turn % players.size());
     Collections.reverse(playerOrder);
   }
 
   public void skip() {
-    turn++;
+    skip = true;
   }
 
   public int getNumPlayers() {
