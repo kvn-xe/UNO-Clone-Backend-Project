@@ -41,7 +41,7 @@ public class Deck implements CardContainer {
       throw new Error("Deck Empty");
     }
     
-    int randNum = (int) (Math.random() * (cards.size() + 1));
+    int randNum = (int) (Math.random() * (cards.size()));
     Card randCard = cards.get(randNum);
     cards.remove(randNum);
     return randCard;
@@ -72,18 +72,7 @@ public class Deck implements CardContainer {
     cards.add(card);
   }
 
-  public boolean isValidPlay(Card card) {
-    Card top = cards.get(cards.size() - 1);
-
-    if (card.getColor().equals("any")) {
-      return true;
-    }
-    if (card.getType().equals("number") && card.getValue() == top.getValue()) {
-      return true;
-    }
-    if (card.getColor().equals(top.getColor())) {
-      return true;
-    }
-    return false;
+  public int getNumCards() {
+    return cards.size();
   }
 }

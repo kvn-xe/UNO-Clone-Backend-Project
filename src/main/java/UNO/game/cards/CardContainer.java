@@ -6,6 +6,8 @@ public interface CardContainer {
     dest.addCard(cardToMove);
   }
 
+  public int getNumCards();
+
   public Card removeCard(Card card);
 
   public void addCard(Card card);

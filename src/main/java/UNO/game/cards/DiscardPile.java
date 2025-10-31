@@ -30,4 +30,27 @@ public class DiscardPile implements CardContainer {
   public void addCard(Card card) {
     pile.add(card);
   }
+
+  public boolean isValidPlay(Card card) {
+    Card top = pile.get(pile.size() - 1);
+
+    if (card.getColor().equals("any")) {
+      return true;
+    }
+    if (card.getType().equals(Card.CHANGE)) {
+      return true;
+    }
+    if (card.getType().equals("number") && card.getValue() == top.getValue()) {
+      return true;
+    }
+    if (card.getColor().equals(top.getColor())) {
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public int getNumCards() {
+    return pile.size()
+  }
 }
