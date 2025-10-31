@@ -3,6 +3,9 @@ package UNO.game.user;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import UNO.game.cards.Card;
 import UNO.game.cards.CardContainer;
 import UNO.game.game.Game;
@@ -112,5 +115,34 @@ public class Player implements CardContainer {
   @Override
   public int getNumCards() {
     return cards.size();
+  }
+
+  public JSONObject json() {
+    JSONObject res = new JSONObject();
+    res.put("id", id);
+
+    if (this.equals(game.getActivePlayer())) {
+      res.put("active", true);
+    } else {
+      res.put("active", false);
+    }
+
+    JSONArray hand = new JSONArray();
+    for (Card card : cards) {
+      hand.put(card.json());
+    }
+    res.put("cards", hand);
+
+    return res;
+  }
+
+  public Card getCard(Card card) {
+    Card res = null;
+    for (Card c : cards) {
+      if (c.equals(card)) {
+        res = c;
+      }
+    }
+    return res;
   }
 }

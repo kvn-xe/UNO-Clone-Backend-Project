@@ -2,6 +2,8 @@ package UNO.game.cards;
 
 import java.util.List;
 
+import org.json.JSONObject;
+
 public class Card {
   public final static String NUMBER = "number";
   public final static String SKIP = "skip";
@@ -88,5 +90,34 @@ public class Card {
 
   public String string() {
     return "{ color: " + color + ", type: " + type + ", value: " + value + " }";
+  }
+
+  public JSONObject json() {
+    JSONObject res = new JSONObject();
+    res.put("object", "card");
+    res.put("color", color);
+    res.put("type", type);
+    res.put("value", value);
+    return res;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Card)) {
+      return false;
+    }
+    Card cardObj = (Card) obj;
+
+    if (!cardObj.getColor().equals(color)) {
+      return false;
+    }
+    if (!cardObj.getType().equals(type)) {
+      return false;
+    }
+    if (cardObj.getValue() != value) {
+      return false;
+    }
+
+    return true;
   }
 }

@@ -6,11 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import UNO.game.cards.Deck;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Events.EventFactory;
 import UNO.game.game.Events.GameEvent;
-import UNO.game.log.GameLog;
 import UNO.game.turn.Turn;
 import UNO.game.user.Player;
 
@@ -34,6 +36,7 @@ public class Game {
   private EventLoop loop;
 
   private int maxTurns;
+  private JSONObject endResult;
 
   public Game() {
     deck = new Deck();
@@ -45,7 +48,6 @@ public class Game {
     universalEventStack = new PriorityQueue<>(GameEvent.eventComparator);
 
     eventFactory = new EventFactory(this);
-    GameLog.startLog();
   }
 
   public Game(int maxTurns) {
@@ -59,7 +61,6 @@ public class Game {
 
     eventFactory = new EventFactory(this);
     this.maxTurns = maxTurns;
-    GameLog.startLog();
   }
 
   public void giveHands() {
@@ -84,7 +85,6 @@ public class Game {
 
       Player activePlayer = turnManager.getActivePlayer();
       gameState = "Turn " + turnManager.getTurnNum();
-      GameLog.logPlayerTurn(activePlayer);
 
       loop = new EventLoop(this);
       Thread thread = new Thread(loop);
@@ -120,6 +120,10 @@ public class Game {
       return null;
     }
     return turnManager.getActivePlayer();
+  }
+
+  public void endGame() {
+    gameState = "Game Over";
   }
 
   public synchronized void addNextEvent(GameEvent event) {
@@ -201,11 +205,37 @@ public class Game {
     players.remove(player.getId());
   }
 
+  public void removePlayer(String playerId) {
+    players.remove(playerId);
+  }
+
   public String logGameState() {
     String res = "Game:\n";
     for (Player p : players.values()) {
       res += p.string();
     }
     return res;
+  }
+
+  public JSONObject getPlayerState(String playerId) {
+    Player player = players.get(playerId);
+    return player.json();
+  }
+
+  public JSONObject getGameState() {
+    JSONObject res = new JSONObject();
+    JSONArray playerArray = new JSONArray();
+    for (Player player : players.values()) {
+      playerArray.put(player.json());
+    }
+
+    res.put("active-player", getActivePlayer().getId());
+    res.put("top-card", getDiscard().getTopCard().json());
+    res.put("deck-size", String.valueOf(getDeck().getNumCards()));
+    return res;
+  }
+
+  public Player getPlayer(String id) {
+    return players.get(id);
   }
 }

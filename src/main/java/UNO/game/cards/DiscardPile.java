@@ -53,4 +53,8 @@ public class DiscardPile implements CardContainer {
   public int getNumCards() {
     return pile.size();
   }
+
+  public Card getTopCard() {
+    return pile.get(pile.size() - 1);
+  }
 }

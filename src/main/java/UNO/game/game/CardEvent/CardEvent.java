@@ -35,6 +35,9 @@ public class CardEvent implements GameEvent {
     if (src instanceof Player && src.getNumCards() == 1) {
       game.getUniversalEventStack().add(game.getEventFactory().createEvent(GameEvent.UNO));
     }
+    if (src instanceof Player && src.getNumCards() == 0) {
+      game.endGame();
+    }
     return res;
   }
 
