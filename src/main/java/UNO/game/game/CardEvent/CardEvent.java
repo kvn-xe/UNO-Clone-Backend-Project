@@ -32,7 +32,7 @@ public class CardEvent implements GameEvent {
     CardContainer.moveCards(card, src, discard);
 
     List<GameEvent> res = new ArrayList<>();
-    if (src instanceof Player) {
+    if (src instanceof Player && src.getNumCards() == 1) {
       game.getUniversalEventStack().add(game.getEventFactory().createEvent(GameEvent.UNO));
     }
     return res;

@@ -24,7 +24,7 @@ public class Game {
   private HashMap<String, Player> players;
 
 
-  private String gameState = "ready";
+  private String gameState = "";
   private PriorityQueue<GameEvent> eventStack = null;
   private PriorityQueue<GameEvent> nextEventStack = null;
   private PriorityQueue<GameEvent> universalEventStack = null;
@@ -68,9 +68,13 @@ public class Game {
     }
   }
 
+  public void initTurnManager() {
+    turnManager = new Turn(players);
+  }
+
   public synchronized void start() {
     giveHands();
-    turnManager = new Turn(players);
+    initTurnManager();
     gameState = "Game Started";
     
     while (!gameState.equals("Game Over")) {
@@ -80,9 +84,7 @@ public class Game {
 
       Player activePlayer = turnManager.getActivePlayer();
       gameState = "Turn " + turnManager.getTurnNum();
-
       GameLog.logPlayerTurn(activePlayer);
-      turnManager.nextTurn();
 
       loop = new EventLoop(this);
       Thread thread = new Thread(loop);
@@ -109,6 +111,7 @@ public class Game {
 
       eventStack = nextEventStack;
       nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
+      turnManager.nextTurn();
     }
   }
 

@@ -4,23 +4,31 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import UNO.game.game.Events.GameEvent;
+import UNO.game.log.GameLog;
+import UNO.game.user.Player;
 
 public class EventLoop extends Thread {
 
-  private final static int SLEEP_TIME = 1000;
+  private final static int SLEEP_TIME = 5000;
 
   private boolean turnEnd = false;
   private Game game = null;
-  private PriorityQueue<GameEvent> eventStack = null;
+  private PriorityQueue<GameEvent> eventStack;
 
   public EventLoop(Game game) {
     this.game = game;
-    eventStack = game.getEventStack();
+    this.eventStack = game.getEventStack();
   }
 
+  @Override
   public void run() {
     while (!turnEnd) {
-      // Sleep if no Events
+      Player activePlayer = game.getActivePlayer();
+      if (activePlayer.hasQueuedAction()) {
+        activePlayer.getQueuedAction().run();
+        activePlayer.resetQueue();
+      }
+
       if (eventStack.size() == 0) {
         try {
           sleep(SLEEP_TIME);
@@ -35,11 +43,13 @@ public class EventLoop extends Thread {
         // Run through Events
         GameEvent event = eventStack.poll();
         List<GameEvent> nextEvents = event.play();
-        if (nextEvents.size() == 0) {
-          turnEnd = true;
-        }
+        GameLog.logEventOccurence(event);
 
-        game.addNextEvents(nextEvents);
+        if (nextEvents == null) {
+          terminate();
+        } else {
+          game.addNextEvents(nextEvents);
+        }
       }
     }
     return;
@@ -58,5 +68,9 @@ public class EventLoop extends Thread {
 
   public void terminate() {
     turnEnd = true;
+  }
+
+  public boolean hasEnded() {
+    return turnEnd;
   }
 }
