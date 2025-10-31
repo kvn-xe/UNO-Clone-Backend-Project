@@ -11,7 +11,6 @@ Just a random project that I might eventually make playable. Uses popular UNO "h
 
 ## Technical Features
 
-- Event driven game loop
 - Priority based event scheduling
 - Simple build with gradle
 
