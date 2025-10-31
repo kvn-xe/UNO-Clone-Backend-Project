@@ -62,7 +62,6 @@ public class EventFactory {
 
   public GameEvent createEvent(String eventType, int numArg) {
     GameEvent event = null;
-
     if (eventType.equals(GameEvent.ADD)) {
       event = new AddEvent(game, game.getActivePlayer(), numArg);
     }

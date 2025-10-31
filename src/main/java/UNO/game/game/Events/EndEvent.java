@@ -1,6 +1,5 @@
 package UNO.game.game.Events;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import UNO.game.game.Game;
@@ -23,7 +22,7 @@ public class EndEvent implements GameEvent {
 
   @Override
   public List<GameEvent> play() {
-    return new ArrayList<>();
+    return null;
   }
 
   @Override
