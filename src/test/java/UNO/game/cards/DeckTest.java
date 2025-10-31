@@ -53,4 +53,18 @@ public class DeckTest {
     assertEquals(cardStrings[cardStrings.length - 1], "[End of Deck]");
     assertTrue((numRed == numYellow && numYellow == numBlue && numBlue == numGreen));
   }
+
+  @Test
+  public void testShuffleDiscardToDeck() {
+    int initialSize = testDeck.getNumCards();
+    DiscardPile discard = new DiscardPile();
+    for (int i = 0; i < 10; i++) {
+      Card card = testDeck.draw();
+      discard.addCard(card);
+    }
+
+    discard.shuffleToDeck(testDeck);
+    assertEquals(initialSize - 1, testDeck.getNumCards());
+    // Discard always keeps 1 card.
+  }
 }
