@@ -33,5 +33,16 @@ public class AddEvent implements GameEvent {
   public int getPrio() {
     return PRIO;
   }
-  
+
+  public int getVal() {
+    return val;
+  }
+
+  public Player getActivePlayer() {
+    return activePlayer;
+  }
+
+  public Game getGame() {
+    return game;
+  }
 }
