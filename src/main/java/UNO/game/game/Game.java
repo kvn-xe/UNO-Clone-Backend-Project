@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import UNO.game.GameController;
 import UNO.game.cards.Deck;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Events.EventFactory;
@@ -147,6 +148,18 @@ public class Game {
     return;
   }
 
+  public synchronized void remCurrentEvent(GameEvent event) {
+    if (event == null) {
+      return;
+    }
+
+    if (loop != null) {
+      loop.remCurrentEvent(event);
+    } else {
+      eventStack.remove(event);
+    }
+  }
+
   public void addNextEvents(Collection<GameEvent> events) {
     for (GameEvent event : events) {
       addNextEvent(event);
@@ -162,11 +175,11 @@ public class Game {
   }
 
   public PriorityQueue<GameEvent> getNextEventStack() {
-    return nextEventStack;
+    return new PriorityQueue<>(nextEventStack);
   }
 
   public PriorityQueue<GameEvent> getUniversalEventStack() {
-    return universalEventStack;
+    return new PriorityQueue<>(universalEventStack);
   }
 
   public String getState() {
@@ -209,14 +222,6 @@ public class Game {
     players.remove(playerId);
   }
 
-  public String logGameState() {
-    String res = "Game:\n";
-    for (Player p : players.values()) {
-      res += p.string();
-    }
-    return res;
-  }
-
   public JSONObject getPlayerState(String playerId) {
     Player player = players.get(playerId);
     return player.json();
@@ -229,9 +234,9 @@ public class Game {
       playerArray.put(player.json());
     }
 
-    res.put("active-player", getActivePlayer().getId());
-    res.put("top-card", getDiscard().getTopCard().json());
-    res.put("deck-size", String.valueOf(getDeck().getNumCards()));
+    res.put(GameController.GAME_ACT_PLAYER_KEY, getActivePlayer().getId());
+    res.put(GameController.GAME_TOP_CARD_KEY, getDiscard().getTopCard().json());
+    res.put(GameController.GAME_REM_CARDS_KEY, String.valueOf(getDeck().getNumCards()));
     return res;
   }
 

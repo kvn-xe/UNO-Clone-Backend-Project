@@ -16,6 +16,7 @@ public interface GameEvent {
   };
 
   public final static String ADD = "add";
+  public final static String ADD_I = "add-interactable";
   public final static String SKIP = "skip";
   public final static String REVERSE = "reverse";
   public final static String END = "end";

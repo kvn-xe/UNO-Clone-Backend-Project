@@ -14,6 +14,7 @@ import UNO.game.game.CardEvent.ChangeCardEvent;
 import UNO.game.game.CardEvent.ReverseCardEvent;
 import UNO.game.game.CardEvent.SkipCardEvent;
 import UNO.game.game.Events.AddEvent;
+import UNO.game.game.Events.AddInteractableEvent;
 import UNO.game.helper.TestConst;
 import UNO.game.helper.TurnExtension;
 import UNO.game.helper.GameTestExtension;
@@ -25,10 +26,10 @@ public class CardEventTest {
 
   public void initTestGame() {
     game = new GameTestExtension();
-    game.initTurnManager();
-    
     testPlayer = new Player(game, "bob");
     game.addPlayer(testPlayer);
+
+    game.initTurnManager();
     game.setActivePlayer(testPlayer);
   }
 
@@ -36,7 +37,7 @@ public class CardEventTest {
   public void TestAddCardEvent() {
     initTestGame();
     game.addCurrentEvent(new AddCardEvent(game, new Card(TestConst.COLOR_1, TestConst.ADD, 2), game.getDiscard(), testPlayer));
-    assertTrue(game.playEvent().get(0).getClass().equals(AddEvent.class));
+    assertTrue(game.playEvent().get(0).getClass().equals(AddInteractableEvent.class));
   }
 
   @Test

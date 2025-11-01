@@ -60,6 +60,13 @@ public class EventLoop extends Thread {
     eventStack.add(event);
   }
 
+  public synchronized void remCurrentEvent(GameEvent event) {
+    if (event == null) {
+      return;
+    }
+    eventStack.remove(event);
+  }
+
   public synchronized void addNextEvent(GameEvent event) {
     game.addNextEvent(event);
   }
