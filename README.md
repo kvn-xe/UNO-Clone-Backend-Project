@@ -1,19 +1,9 @@
 
-# Backend for UNO-like Game
+# Intro
 
-Just a random project that I might eventually make playable. Uses popular UNO "house" rules.
-- Play cards with same color/number
-- Only other +2 cards can be chained on top of +2 cards
+A simple backend recreation of the card game UNO, built in Java using Gradle.
 
-
-
-
-
-## Technical Features
-
-- Priority based event scheduling
-- Simple build with gradle
-
+This project models core UNO logic — including card interactions, player states, and event-driven turn handling.
 
 ## Interface (GameController.java)
 
@@ -22,28 +12,84 @@ Currently a controller class responsible for
 - Player game actions 
 - Returning Game state and player information
 
-Primarily uses JSONObject (https://mvnrepository.com/artifact/org.json/json) as arguments for these methods. 
+Uses [`org.json.JSONObject`](https://mvnrepository.com/artifact/org.json/json) for method arguments and responses.
 
-### Player
+---
 
-Calling a method for any player action or requesting player state will require a JSONObject with an "id" field. Player objects are created/removed when players join/leave through methods in the interface. Player objects will be created with the "id" fields given by provided JSONObject on method call. Player states will be returned in a JSONObject with,
-| key | value | type |
-|-----------|-----------|-----------|
-| id | Id of player  | String |
-| active | Current acting player | boolean  |
+### **Methods**
 
-Also contains the JSONArray of Card, Cards are represented by JSONObjects with
-| key | value | type |
-|-----------|-----------|-----------|
-| type | number/add/reverse/skip/change  | String |
-| color | Current acting player | String  |
-| value | number/add value | String  |
+| Method | Argument | Type |
+|--------|-----------|------|
+| `playerJoin` | JSON with player ID | `JSONObject` |
+| `playerLeave` | JSON with player ID | `JSONObject` |
+| `getPlayerState` | JSON with player ID | `JSONObject` |
+| `getGameState` | *(none)* | *(none)* |
+| `gameStart` | *(none)* | *(none)* |
+| `playerDraw` | JSON with player ID | `JSONObject` |
+| `playerPlay` | JSON with player ID and a card | `JSONObject` |
 
-### Game
+---
 
-There exists methods for starting a game and getting game state, which returns a JSONObject with,
-| key | value | type |
-|-----------|-----------|-----------|
-| active-player | id of active player  | String |
-| top-card | top card on play stack | JSON  |
-| deck-size | size of remaining deck | String  |
+### **Player Schema**
+
+| Key | Description | Type |
+|-----|--------------|------|
+| `id` | Unique player ID | `String` |
+| `active` | Whether this player is the current acting player | `boolean` |
+
+
+---
+
+### **Card Schema**
+
+| Key | Description | Type |
+|-----|--------------|------|
+| `type` | `number`, `add`, `reverse`, `skip`, or `change` | `String` |
+| `color` | Card color | `String` |
+| `value` | Card number or special value | `String` |
+
+---
+
+### **Game Schema**
+
+| Key | Description | Type |
+|-----|--------------|------|
+| `active-player` | ID of the current player | `String` |
+| `top-card` | JSON representing the top card on the play stack | `JSONObject` |
+| `deck-size` | Remaining number of cards in the deck | `int` |
+
+---
+## Overview
+### **Core Components**
+- **`EventLoop`** — Handles scheduling and dispatching of game events (e.g., player actions, card draws, turn transitions).  
+  It manages a priority queue of pending actions to ensure turn order and timing consistency.
+- **`Game`** — Maintains core game state, including the deck, discard pile, active player, and current direction of play.  
+  It also enforces UNO-specific rules like stacking `+2` cards or color matching.
+- **`GameController`** — Acts as the main interface for player input and state retrieval.  
+  It wraps low-level game logic in a simple API for external clients or future frontend integration.
+
+---
+
+## Build Instructions (Gradle)
+
+### **Requirements**
+- Gradle   
+- Java 21
+
+Check setup:
+```bash
+gradle -v
+java -version
+```
+
+1.
+Clone the repo with
+<pre> git clone https://github.com/kvn-xe/UNO-Clone-Backend-Project.git </pre>
+2.
+Build the project with
+<pre> ./gradlew build </pre>
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
