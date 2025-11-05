@@ -76,7 +76,7 @@ public class Game {
         break;
       }
 
-      loop = new EventLoop(turnManager, scheduler, eventFactory);
+      loop = new EventLoop(turnManager, scheduler);
       Thread thread = new Thread(loop);
       thread.start();
 

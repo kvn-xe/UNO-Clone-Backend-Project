@@ -9,10 +9,10 @@ import org.json.JSONObject;
 import UNO.game.cards.Card;
 import UNO.game.cards.CardContainer;
 import UNO.game.game.Game;
-import UNO.game.game.Events.GameEvent;
 
 public class Player implements CardContainer {
   private final static int DRAW_DEF = 1;
+  
   private Game game;
   private List<Card> cards = new ArrayList<>();
   private String id;

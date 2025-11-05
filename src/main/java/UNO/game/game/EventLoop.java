@@ -2,7 +2,6 @@ package UNO.game.game;
 
 import java.util.List;
 
-import UNO.game.game.Events.EventFactory;
 import UNO.game.game.Events.GameEvent;
 import UNO.game.turn.Turn;
 
@@ -11,13 +10,11 @@ public class EventLoop extends Thread {
   private boolean turnEnd = false;
   
   private EventScheduler scheduler;
-  private EventFactory eventFactory;
   private Turn turnManager;
 
-  public EventLoop(Turn turnManager, EventScheduler scheduler, EventFactory eventFactory) {
+  public EventLoop(Turn turnManager, EventScheduler scheduler) {
     this.turnManager = turnManager;
     this.scheduler = scheduler;
-    this.eventFactory = eventFactory;
   }
 
   @Override
