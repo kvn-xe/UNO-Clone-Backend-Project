@@ -37,7 +37,7 @@ public class Player implements CardContainer {
       queueActionDraw();
       return;
     }
-    game.addCurrentEvent(game.getEventFactory().createEvent(GameEvent.ADD, DRAW_DEF));
+    game.drawAction();
   }
 
   public String getId() {
@@ -52,7 +52,7 @@ public class Player implements CardContainer {
     if (!game.getActivePlayer().equals(this)) {
       queueActionPlay(card);
     }
-    game.addCurrentEvent(game.getEventFactory().createEvent(card));
+    game.playAction(card);
   }
 
   @Override
@@ -87,7 +87,7 @@ public class Player implements CardContainer {
 
   public void queueActionPlay(Card card) {
     queuedAction = () -> {
-      game.addCurrentEvent(game.getEventFactory().createEvent(card));
+      game.playAction(card);
     };
   }
 
@@ -96,7 +96,7 @@ public class Player implements CardContainer {
       if (!game.getActivePlayer().equals(this)) {
         return;
       }
-      game.addCurrentEvent(game.getEventFactory().createEvent(GameEvent.ADD, DRAW_DEF));
+      game.drawAction();;
     };
   }
 

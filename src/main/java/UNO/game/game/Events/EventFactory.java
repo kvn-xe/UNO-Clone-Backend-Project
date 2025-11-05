@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import UNO.game.cards.Card;
+import UNO.game.game.EventScheduler;
 import UNO.game.game.Game;
 import UNO.game.game.CardEvent.AddCardEvent;
 import UNO.game.game.CardEvent.ChangeCardEvent;
@@ -76,5 +77,16 @@ public class EventFactory {
       events.add(createEvent(eventType));
     }
     return events;
+  }
+
+  public static void createUniversalEvent(String eventType, EventScheduler scheduler) {
+    switch (eventType) {
+      case GameEvent.UNO:
+        scheduler.addCurrentEvent(new UNOEvent(null));
+        break;
+    
+      default:
+        break;
+    }
   }
 }

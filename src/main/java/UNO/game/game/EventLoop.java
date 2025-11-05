@@ -1,74 +1,45 @@
 package UNO.game.game;
 
 import java.util.List;
-import java.util.PriorityQueue;
 
+import UNO.game.game.Events.EventFactory;
 import UNO.game.game.Events.GameEvent;
-import UNO.game.user.Player;
+import UNO.game.turn.Turn;
 
 public class EventLoop extends Thread {
 
-  private final static int SLEEP_TIME = 5000;
-
   private boolean turnEnd = false;
-  private Game game = null;
-  private PriorityQueue<GameEvent> eventStack;
+  
+  private EventScheduler scheduler;
+  private EventFactory eventFactory;
+  private Turn turnManager;
 
-  public EventLoop(Game game) {
-    this.game = game;
-    this.eventStack = game.getEventStack();
+  public EventLoop(Turn turnManager, EventScheduler scheduler, EventFactory eventFactory) {
+    this.turnManager = turnManager;
+    this.scheduler = scheduler;
+    this.eventFactory = eventFactory;
   }
 
   @Override
   public void run() {
     while (!turnEnd) {
-      Player activePlayer = game.getActivePlayer();
-      if (activePlayer.hasQueuedAction()) {
-        activePlayer.getQueuedAction().run();
-        activePlayer.resetQueue();
-      }
+      turnManager.triggerQueuedActions();
 
-      if (eventStack.size() == 0) {
-        try {
-          sleep(SLEEP_TIME);
-        } catch (Exception e) {
-          System.err.println("Event Loop Terminated");
-          break;
-        }
-
-      } else {
-        eventStack.add(game.getEventFactory().createEvent(GameEvent.END));
-
-        // Run through Events
-        GameEvent event = eventStack.poll();
+      try {
+        GameEvent event = scheduler.waitForNextEvent(); 
         List<GameEvent> nextEvents = event.play();
-
-        if (nextEvents == null) {
-          terminate();
+        if (nextEvents != null) {
+          scheduler.addNextEvents(nextEvents);
         } else {
-          game.addNextEvents(nextEvents);
+          terminate();
         }
+
+      } catch (InterruptedException e) {
+        System.err.println("EventLoop Interrupted");
+        Thread.currentThread().interrupt();
       }
     }
     return;
-  }
-
-  public synchronized void addCurrentEvent(GameEvent event) {
-    if (event == null) {
-      return;
-    }
-    eventStack.add(event);
-  }
-
-  public synchronized void remCurrentEvent(GameEvent event) {
-    if (event == null) {
-      return;
-    }
-    eventStack.remove(event);
-  }
-
-  public synchronized void addNextEvent(GameEvent event) {
-    game.addNextEvent(event);
   }
 
   public void terminate() {

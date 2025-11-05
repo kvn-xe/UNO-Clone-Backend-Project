@@ -8,6 +8,7 @@ import UNO.game.user.Player;
 
 public class GameController {
   // Game fields
+  public final static String GAME_STATE_KEY = "game-state";
   public final static String GAME_ACT_PLAYER_KEY = "active-player";
   public final static String GAME_TOP_CARD_KEY = "top-card";
   public final static String GAME_REM_CARDS_KEY = "deck-size";
@@ -41,7 +42,7 @@ public class GameController {
   }
 
   public JSONObject getGameState() {
-    return unoGame.getGameState();
+    return unoGame.getJSON();
   }
 
   public boolean gameStart() {
@@ -57,9 +58,8 @@ public class GameController {
     JSONObject cardJSON = json.getJSONObject(CARD_KEY);
     Player player = unoGame.getPlayer(json.getString(PLAYER_ID_KEY));
     player.actionPlay(player.getCard(new Card(
-      cardJSON.getString(CARD_COLOR_KEY), 
-      cardJSON.getString(CARD_TYPE_KEY), 
-      cardJSON.getInt(CARD_VAL_KEY)
-    )));
+        cardJSON.getString(CARD_COLOR_KEY),
+        cardJSON.getString(CARD_TYPE_KEY),
+        cardJSON.getInt(CARD_VAL_KEY))));
   }
 }

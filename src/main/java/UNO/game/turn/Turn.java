@@ -69,4 +69,14 @@ public class Turn {
   public void setActivePlayer(Player player) {
     turn = playerOrder.indexOf(player);
   }
+
+  public boolean triggerQueuedActions() {
+    Player activePlayer = getActivePlayer();
+    if (!activePlayer.hasQueuedAction()) {
+      return false;
+    }
+
+    activePlayer.getQueuedAction().run();
+    return true;
+  }
 }

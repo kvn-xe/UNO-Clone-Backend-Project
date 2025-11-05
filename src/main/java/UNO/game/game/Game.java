@@ -1,19 +1,21 @@
 package UNO.game.game;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.PriorityQueue;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import UNO.game.GameController;
+import UNO.game.cards.Card;
 import UNO.game.cards.Deck;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Events.EventFactory;
 import UNO.game.game.Events.GameEvent;
+import UNO.game.game.GameState.GameEnd;
+import UNO.game.game.GameState.GameStart;
+import UNO.game.game.GameState.GameState;
 import UNO.game.turn.Turn;
 import UNO.game.user.Player;
 
@@ -21,34 +23,24 @@ public class Game {
 
   private static final int PLAYER_TIMEOUT = 10;
   private static final int START_HAND = 5;
+  private static final int MAX_TURNS = 500;
+  private static final int DRAW_DEF = 2;
   
   private Deck deck = null;
   private DiscardPile pile = null;
   private HashMap<String, Player> players;
 
-
-  private String gameState = "";
-  private PriorityQueue<GameEvent> eventStack = null;
-  private PriorityQueue<GameEvent> nextEventStack = null;
-  private PriorityQueue<GameEvent> universalEventStack = null;
+  private GameState gameState;
+  private EventScheduler scheduler;
 
   private EventFactory eventFactory = null;
   private Turn turnManager = null;
   private EventLoop loop;
 
   private int maxTurns;
-  private JSONObject endResult;
 
   public Game() {
-    deck = new Deck();
-    pile = new DiscardPile();
-    players = new HashMap<>();
-
-    eventStack = new PriorityQueue<>(GameEvent.eventComparator);
-    nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
-    universalEventStack = new PriorityQueue<>(GameEvent.eventComparator);
-
-    eventFactory = new EventFactory(this);
+    this(MAX_TURNS);
   }
 
   public Game(int maxTurns) {
@@ -56,11 +48,10 @@ public class Game {
     pile = new DiscardPile();
     players = new HashMap<>();
 
-    eventStack = new PriorityQueue<>(GameEvent.eventComparator);
-    nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
-    universalEventStack = new PriorityQueue<>(GameEvent.eventComparator);
-
     eventFactory = new EventFactory(this);
+    scheduler = new EventScheduler();
+    gameState = new GameStart(this);
+
     this.maxTurns = maxTurns;
   }
 
@@ -75,19 +66,17 @@ public class Game {
   }
 
   public synchronized void start() {
-    giveHands();
-    initTurnManager();
-    gameState = "Game Started";
+    if (!(gameState instanceof GameStart)) {
+      return;
+    }
+    ((GameStart) gameState).start();
     
-    while (!gameState.equals("Game Over")) {
+    while (!(gameState instanceof GameEnd)) {
       if (turnManager.getTurnNum() == maxTurns) {
         break;
       }
 
-      Player activePlayer = turnManager.getActivePlayer();
-      gameState = "Turn " + turnManager.getTurnNum();
-
-      loop = new EventLoop(this);
+      loop = new EventLoop(turnManager, scheduler, eventFactory);
       Thread thread = new Thread(loop);
       thread.start();
 
@@ -110,10 +99,11 @@ public class Game {
         System.out.println("EventLoop Thread Interrupted");
       }
 
-      eventStack = nextEventStack;
-      nextEventStack = new PriorityQueue<>(GameEvent.eventComparator);
+      scheduler.cycleEvents();
       turnManager.nextTurn();
     }
+
+    endGame();
   }
 
   public Player getActivePlayer() {
@@ -124,65 +114,14 @@ public class Game {
   }
 
   public void endGame() {
-    gameState = "Game Over";
-  }
-
-  public synchronized void addNextEvent(GameEvent event) {
-    if (event == null) {
-      return;
-    }
-    nextEventStack.add(event);
-    return;
-  }
-
-  public synchronized void addCurrentEvent(GameEvent event) {
-    if (event == null) {
-      return;
-    }
-
-    if (loop != null) {
-      loop.addCurrentEvent(event);
-    } else {
-      eventStack.add(event);
-    }
-    return;
-  }
-
-  public synchronized void remCurrentEvent(GameEvent event) {
-    if (event == null) {
-      return;
-    }
-
-    if (loop != null) {
-      loop.remCurrentEvent(event);
-    } else {
-      eventStack.remove(event);
-    }
-  }
-
-  public void addNextEvents(Collection<GameEvent> events) {
-    for (GameEvent event : events) {
-      addNextEvent(event);
-    }
+    gameState.endGame();
   }
 
   public EventFactory getEventFactory() {
     return eventFactory;
   }
 
-  public PriorityQueue<GameEvent> getEventStack() {
-    return new PriorityQueue<>(eventStack);
-  }
-
-  public PriorityQueue<GameEvent> getNextEventStack() {
-    return new PriorityQueue<>(nextEventStack);
-  }
-
-  public PriorityQueue<GameEvent> getUniversalEventStack() {
-    return new PriorityQueue<>(universalEventStack);
-  }
-
-  public String getState() {
+  public GameState getState() {
     return gameState;
   }
 
@@ -227,20 +166,41 @@ public class Game {
     return player.json();
   }
 
-  public JSONObject getGameState() {
+  public JSONObject getJSON() {
     JSONObject res = new JSONObject();
     JSONArray playerArray = new JSONArray();
     for (Player player : players.values()) {
       playerArray.put(player.json());
     }
 
+    res.put(GameController.GAME_STATE_KEY, gameState.string());
     res.put(GameController.GAME_ACT_PLAYER_KEY, getActivePlayer().getId());
     res.put(GameController.GAME_TOP_CARD_KEY, getDiscard().getTopCard().json());
     res.put(GameController.GAME_REM_CARDS_KEY, String.valueOf(getDeck().getNumCards()));
     return res;
   }
 
+  public void addCurrentEvent(GameEvent event) {
+    scheduler.addCurrentEvent(event);
+  }
+
+  public EventScheduler getSchedule() {
+    return scheduler;
+  }
+
   public Player getPlayer(String id) {
     return players.get(id);
+  }
+
+  public void drawAction() {
+    scheduler.addCurrentEvent(eventFactory.createEvent(GameEvent.ADD, DRAW_DEF));
+  }
+
+  public void playAction(Card card) {
+    scheduler.addCurrentEvent(eventFactory.createEvent(card));
+  }
+
+  public void addUniversalEvent(GameEvent event) {
+    scheduler.addUniversalEvent(event);
   }
 }

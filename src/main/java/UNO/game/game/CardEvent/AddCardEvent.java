@@ -20,10 +20,9 @@ public class AddCardEvent extends CardEvent {
     List<GameEvent> res = super.play();
     res.add(getGame().getEventFactory().createEvent(GameEvent.ADD_I, getCard().getValue()));
 
-    List<GameEvent> pendingAddEvents = getGame().getEventStack().stream().filter((e) -> e instanceof AddInteractableEvent).toList();
+    List<GameEvent> pendingAddEvents = getGame().getSchedule().getEvents(AddInteractableEvent.class);
     for (GameEvent event : pendingAddEvents) {
-      getGame().remCurrentEvent(event);
-      getGame().addNextEvent(event);
+      getGame().getSchedule().moveToNext(event);
     }
     return res;
   }

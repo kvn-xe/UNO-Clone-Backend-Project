@@ -33,7 +33,7 @@ public class CardEvent implements GameEvent {
 
     List<GameEvent> res = new ArrayList<>();
     if (src instanceof Player && src.getNumCards() == 1) {
-      game.getUniversalEventStack().add(game.getEventFactory().createEvent(GameEvent.UNO));
+      game.addUniversalEvent(game.getEventFactory().createEvent(GameEvent.UNO));
     }
     if (src instanceof Player && src.getNumCards() == 0) {
       game.endGame();
