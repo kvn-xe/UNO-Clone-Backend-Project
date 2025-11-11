@@ -7,12 +7,13 @@ import UNO.game.cards.Card;
 import UNO.game.cards.CardContainer;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Game;
+import UNO.game.game.Events.EndEvent;
 import UNO.game.game.Events.GameEvent;
 import UNO.game.user.Player;
 
 public class CardEvent implements GameEvent {
 
-  private final static int PRIO = 5;
+  private final static int PRIO = GameEvent.CARD_P;
 
   private Game game = null;
   private Card card = null;
@@ -38,6 +39,8 @@ public class CardEvent implements GameEvent {
     if (src instanceof Player && src.getNumCards() == 0) {
       game.endGame();
     }
+
+    res.add(new EndEvent(game));
     return res;
   }
 

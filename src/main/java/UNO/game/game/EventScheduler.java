@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.CompletableFuture;
 
+import UNO.game.game.Events.EndEvent;
 import UNO.game.game.Events.GameEvent;
 
 public class EventScheduler {
@@ -12,6 +14,7 @@ public class EventScheduler {
   private PriorityQueue<GameEvent> currentEvents = new PriorityQueue<>(EVENT_CMP);
   private PriorityQueue<GameEvent> nextEvents = new PriorityQueue<>(EVENT_CMP);
   private PriorityQueue<GameEvent> universalEvents = new PriorityQueue<>(EVENT_CMP);
+  private CompletableFuture<Void> hasEvents = new CompletableFuture<>();
 
   public final static Comparator<GameEvent> EVENT_CMP = new Comparator<>() {
     @Override
@@ -20,21 +23,32 @@ public class EventScheduler {
     }
   };
 
-  public GameEvent waitForNextEvent() throws InterruptedException {
-    while (currentEvents.isEmpty()) {
-      wait();
+  public EventScheduler(Game game) {
+    currentEvents.add(new EndEvent(game));
+  }
+
+  public synchronized GameEvent waitForNextEvent() {
+    try {
+      hasEvents.get();
+      if (currentEvents.size() == 1) {
+        hasEvents = new CompletableFuture<>();
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+
     return currentEvents.poll();
   }
 
-  public synchronized void addCurrentEvent(GameEvent event) {
+  public void addCurrentEvent(GameEvent event) {
     currentEvents.add(event);
-    notify();
+    hasEvents.complete(null);
   }
 
-  public synchronized void addCurrentEvents(Collection<GameEvent> events) {
+  public void addCurrentEvents(Collection<GameEvent> events) {
     currentEvents.addAll(events);
-    notify();
+    hasEvents.complete(null);
   }
 
   public synchronized void addNextEvent(GameEvent event) {
@@ -56,7 +70,7 @@ public class EventScheduler {
 
   public void cycleEvents() {
     currentEvents = nextEvents;
-    nextEvents = new PriorityQueue<>();
+    nextEvents = new PriorityQueue<>(EVENT_CMP);
   }
 
   public int numCurrentEvents() {

@@ -3,6 +3,12 @@ package UNO.game.game;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,10 +24,11 @@ import UNO.game.game.GameState.GameStart;
 import UNO.game.game.GameState.GameState;
 import UNO.game.turn.Turn;
 import UNO.game.user.Player;
+import UNO.game.user.PlayerAction;
 
 public class Game {
 
-  private static final int PLAYER_TIMEOUT = 10;
+  private static final int PLAYER_TIMEOUT = 100;
   private static final int START_HAND = 5;
   private static final int MAX_TURNS = 500;
   private static final int DRAW_DEF = 2;
@@ -29,14 +36,13 @@ public class Game {
   private Deck deck = null;
   private DiscardPile pile = null;
   private HashMap<String, Player> players;
-
   private GameState gameState;
   private EventScheduler scheduler;
-
   private EventFactory eventFactory = null;
   private Turn turnManager = null;
   private EventLoop loop;
-
+  private CompletableFuture<Void> ready = new CompletableFuture<>();
+  private CompletableFuture<Void> turnFin = new CompletableFuture<>();
   private int maxTurns;
 
   public Game() {
@@ -47,10 +53,21 @@ public class Game {
     deck = new Deck();
     pile = new DiscardPile();
     players = new HashMap<>();
-
     eventFactory = new EventFactory(this);
-    scheduler = new EventScheduler();
+    scheduler = new EventScheduler(this);
     gameState = new GameStart(this);
+
+    this.maxTurns = maxTurns;
+  }
+
+  public Game(int maxTurns, Deck deck, DiscardPile pile, HashMap<String, Player> players, Turn turnManager, EventScheduler scheduler) {
+    this.deck = (deck != null) ? deck : new Deck();
+    this.pile = (pile != null) ? pile : new DiscardPile();
+    this.players = (players != null) ? players : new HashMap<>();
+    this.turnManager = (turnManager != null) ? turnManager : null;
+    this.scheduler = (scheduler != null) ? scheduler : new EventScheduler(this);
+    gameState = new GameStart(this);
+    eventFactory = new EventFactory(this);
 
     this.maxTurns = maxTurns;
   }
@@ -61,8 +78,22 @@ public class Game {
     }
   }
 
+  public void waitTillReady() {
+    try {
+      ready.get();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
   public void initTurnManager() {
-    turnManager = new Turn(players);
+    if (turnManager == null) {
+      turnManager = new Turn(players);
+    }
+  }
+
+  public void initDiscard() {
+    pile.init(deck);
   }
 
   public synchronized void start() {
@@ -77,28 +108,24 @@ public class Game {
       }
 
       loop = new EventLoop(turnManager, scheduler);
-      Thread thread = new Thread(loop);
-      thread.start();
-
-      long start = System.currentTimeMillis();
-      while ((System.currentTimeMillis() - start) < PLAYER_TIMEOUT * 1000) {
-        if (loop.hasEnded()) {
-          break;
-        }
-
-        try {
-          wait(500);
-        } catch (Exception e) {
-        }
+      if (!ready.isDone()) {
+        ready.complete(null);
       }
+      
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Future<?> eventThread = executor.submit(loop);
 
-      loop.terminate();
       try {
-        thread.join();
+        eventThread.get(PLAYER_TIMEOUT, TimeUnit.SECONDS);
+      } catch (TimeoutException e) {
+        eventThread.cancel(true);
+      } catch (InterruptedException e) {
+        System.err.println("Turn Interrupted");
       } catch (Exception e) {
-        System.out.println("EventLoop Thread Interrupted");
+        e.printStackTrace();
       }
 
+      turnFin.complete(null);
       scheduler.cycleEvents();
       turnManager.nextTurn();
     }
@@ -106,11 +133,24 @@ public class Game {
     endGame();
   }
 
+  public void waitTillTurnFin() {
+    try {
+      turnFin.get();
+      turnFin = new CompletableFuture<>();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
   public Player getActivePlayer() {
     if (turnManager == null) {
       return null;
     }
     return turnManager.getActivePlayer();
+  }
+
+  public String getActivePlayerId() {
+    return getActivePlayer().getId();
   }
 
   public void endGame() {
@@ -178,6 +218,13 @@ public class Game {
     res.put(GameController.GAME_TOP_CARD_KEY, getDiscard().getTopCard().json());
     res.put(GameController.GAME_REM_CARDS_KEY, String.valueOf(getDeck().getNumCards()));
     return res;
+  }
+
+  public void registerPlayerAction(String playerId, PlayerAction action) {
+    if (!turnManager.getActivePlayer().getId().equals(playerId)) {
+      return;
+    }
+    addCurrentEvent(eventFactory.createEvent(action));
   }
 
   public void addCurrentEvent(GameEvent event) {

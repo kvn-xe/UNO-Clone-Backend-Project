@@ -8,7 +8,7 @@ import UNO.game.user.Player;
 
 public class AddEvent implements GameEvent {
 
-  private final static int PRIO = 1;
+  private final static int PRIO = GameEvent.ADD_P;
 
   private Game game = null;
   private Player activePlayer = null;

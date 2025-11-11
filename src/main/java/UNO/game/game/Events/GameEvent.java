@@ -14,4 +14,12 @@ public interface GameEvent {
   public final static String END = "end";
   public final static String FORCED_END = "forced-end";
   public final static String UNO = "uno";
+
+  public final static int ADD_P = 4;
+  public final static int ADDI_P = 3;
+  public final static int ACT_P = 1;
+  public final static int END_P = 4;
+  public final static int ENDF_P = 0;
+  public final static int CARD_P = 2;
+  public final static int UNO_P = 1;
 }

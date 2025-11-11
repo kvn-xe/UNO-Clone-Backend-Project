@@ -21,19 +21,13 @@ public class EventLoop extends Thread {
   public void run() {
     while (!turnEnd) {
       turnManager.triggerQueuedActions();
-
-      try {
-        GameEvent event = scheduler.waitForNextEvent(); 
-        List<GameEvent> nextEvents = event.play();
-        if (nextEvents != null) {
-          scheduler.addNextEvents(nextEvents);
-        } else {
-          terminate();
-        }
-
-      } catch (InterruptedException e) {
-        System.err.println("EventLoop Interrupted");
-        Thread.currentThread().interrupt();
+      GameEvent event = scheduler.waitForNextEvent();
+      List<GameEvent> nextEvents = event.play();
+      
+      if (nextEvents != null) {
+        scheduler.addNextEvents(nextEvents);
+      } else {
+        terminate();
       }
     }
     return;

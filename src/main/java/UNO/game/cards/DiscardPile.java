@@ -31,6 +31,10 @@ public class DiscardPile implements CardContainer {
     pile.add(card);
   }
 
+  public void init(Deck deck) {
+    pile.add(deck.draw());
+  }
+
   public boolean isValidPlay(Card card) {
     Card top = pile.get(pile.size() - 1);
 

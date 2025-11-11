@@ -8,10 +8,13 @@ import UNO.game.cards.Card;
 import UNO.game.game.EventScheduler;
 import UNO.game.game.Game;
 import UNO.game.game.CardEvent.AddCardEvent;
+import UNO.game.game.CardEvent.CardEvent;
 import UNO.game.game.CardEvent.ChangeCardEvent;
 import UNO.game.game.CardEvent.ReverseCardEvent;
 import UNO.game.game.CardEvent.SkipCardEvent;
 import UNO.game.game.CardEvent.UNOEvent;
+import UNO.game.user.Player;
+import UNO.game.user.PlayerAction;
 
 public class EventFactory {
   private Game game;
@@ -36,6 +39,8 @@ public class EventFactory {
       case Card.SKIP:
         event = new SkipCardEvent(game, card, game.getDiscard(), game.getActivePlayer());
         break;
+      default:
+        event = new CardEvent(game, card, game.getDiscard(), game.getActivePlayer());
     }
 
     return event;
@@ -61,6 +66,20 @@ public class EventFactory {
     return event;
   }
 
+  public GameEvent createEvent(PlayerAction action) {
+    GameEvent res = null;
+    
+    switch (action.getActionType()) {
+      case Player.PLAYER_DRAW:
+        res = new AddEvent(game, game.getActivePlayer(), 1);
+      case Player.PLAYER_PLAY:
+        res = createEvent(action.getCard());
+      default:
+        break;
+    }
+    return res;
+  }
+
   public GameEvent createEvent(String eventType, int numArg) {
     GameEvent event = null;
     if (eventType.equals(GameEvent.ADD)) {
@@ -84,7 +103,6 @@ public class EventFactory {
       case GameEvent.UNO:
         scheduler.addCurrentEvent(new UNOEvent(null));
         break;
-    
       default:
         break;
     }

@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import UNO.game.cards.Card;
 import UNO.game.game.Game;
 import UNO.game.user.Player;
+import UNO.game.user.PlayerAction;
 
 public class GameController {
   // Game fields
@@ -23,22 +24,30 @@ public class GameController {
   public final static String CARD_TYPE_KEY = "type";
   public final static String CARD_VAL_KEY = "value";
 
+  // Action
+  public final static String ACTION_KEY = "action";
+
+
   private Game unoGame;
 
   public GameController(int maxTurns) {
     unoGame = new Game(maxTurns);
   }
 
-  public void playerJoin(JSONObject json) {
-    unoGame.addPlayer(new Player(unoGame, json.getString(PLAYER_ID_KEY)));
+  public GameController(Game game) {
+    unoGame = game;
   }
 
-  public void playerLeave(JSONObject json) {
-    unoGame.removePlayer(json.getString(PLAYER_ID_KEY));
+  public void playerJoin(JSONObject playerJSON) {
+    unoGame.addPlayer(new Player(unoGame, playerJSON.getString(PLAYER_ID_KEY)));
   }
 
-  public JSONObject getPlayerState(JSONObject json) {
-    return unoGame.getPlayerState(json.getString(PLAYER_ID_KEY));
+  public void playerLeave(JSONObject playerJSON) {
+    unoGame.removePlayer(playerJSON.getString(PLAYER_ID_KEY));
+  }
+
+  public JSONObject getPlayerState(JSONObject playerJSON) {
+    return unoGame.getPlayerState(playerJSON.getString(PLAYER_ID_KEY));
   }
 
   public JSONObject getGameState() {
@@ -48,6 +57,11 @@ public class GameController {
   public boolean gameStart() {
     unoGame.start();
     return true;
+  }
+
+  public void playerAction(JSONObject actionJSON) {
+    String playerId = actionJSON.getString(PLAYER_ID_KEY);
+    unoGame.registerPlayerAction(playerId, new PlayerAction(actionJSON.getJSONObject(ACTION_KEY)));
   }
 
   public void playerDraw(JSONObject json) {

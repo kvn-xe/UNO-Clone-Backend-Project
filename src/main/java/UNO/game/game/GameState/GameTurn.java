@@ -3,12 +3,9 @@ package UNO.game.game.GameState;
 import UNO.game.game.Game;
 
 public class GameTurn extends GameState {
-  
-  private Game game; 
 
   public GameTurn(Game game) {
     super();
-    this.game = game;
   }
 
   @Override

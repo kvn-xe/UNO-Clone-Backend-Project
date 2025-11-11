@@ -11,7 +11,10 @@ import UNO.game.cards.CardContainer;
 import UNO.game.game.Game;
 
 public class Player implements CardContainer {
-  private final static int DRAW_DEF = 1;
+  // private final static int DRAW_DEF = 1;
+
+  public final static String PLAYER_DRAW = "draw";
+  public final static String PLAYER_PLAY = "play";
   
   private Game game;
   private List<Card> cards = new ArrayList<>();
@@ -19,6 +22,14 @@ public class Player implements CardContainer {
   private Runnable queuedAction;
 
   public Player() {
+  }
+
+  public Player(String id) {
+    this.id = id;
+  }
+
+  public void setGame(Game game) {
+    this.game = game;
   }
 
   public Player(Game game, String id) {

@@ -14,6 +14,7 @@ public class GameStart extends GameState {
   public void start() {
     game.initTurnManager();
     game.giveHands();
+    game.initDiscard();
   }
 
   @Override
