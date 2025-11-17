@@ -42,6 +42,10 @@ public class AddEvent implements GameEvent {
     return activePlayer;
   }
 
+  public void setPlayer(Player player) {
+    this.activePlayer = player;
+  }
+
   public Game getGame() {
     return game;
   }

@@ -27,7 +27,6 @@ public class GameController {
   // Action
   public final static String ACTION_KEY = "action";
 
-
   private Game unoGame;
 
   public GameController(int maxTurns) {

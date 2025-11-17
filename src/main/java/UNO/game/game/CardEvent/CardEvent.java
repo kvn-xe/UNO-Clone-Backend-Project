@@ -29,19 +29,25 @@ public class CardEvent implements GameEvent {
 
   @Override
   public List<GameEvent> play() {
+    placeCardInDeck();
+    placeCardEvents();
+    
+    return new ArrayList<>();
+  }
+
+  protected void placeCardInDeck() {
     card.discard();
     CardContainer.moveCards(card, src, discard);
+  }
 
-    List<GameEvent> res = new ArrayList<>();
+  protected void placeCardEvents() {
     if (src instanceof Player && src.getNumCards() == 1) {
       game.addUniversalEvent(game.getEventFactory().createEvent(GameEvent.UNO));
     }
     if (src instanceof Player && src.getNumCards() == 0) {
       game.endGame();
     }
-
-    res.add(new EndEvent(game));
-    return res;
+    game.getSchedule().addCurrentEvent(new EndEvent(game));
   }
 
   @Override

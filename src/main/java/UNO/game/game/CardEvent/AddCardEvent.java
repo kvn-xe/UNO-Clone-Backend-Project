@@ -7,6 +7,7 @@ import UNO.game.cards.CardContainer;
 import UNO.game.cards.DiscardPile;
 import UNO.game.game.Game;
 import UNO.game.game.Events.AddInteractableEvent;
+import UNO.game.game.Events.EndEvent;
 import UNO.game.game.Events.GameEvent;
 
 public class AddCardEvent extends CardEvent {
@@ -19,11 +20,17 @@ public class AddCardEvent extends CardEvent {
   public List<GameEvent> play() {
     List<GameEvent> res = super.play();
     res.add(getGame().getEventFactory().createEvent(GameEvent.ADD_I, getCard().getValue()));
-
     List<GameEvent> pendingAddEvents = getGame().getSchedule().getEvents(AddInteractableEvent.class);
     for (GameEvent event : pendingAddEvents) {
       getGame().getSchedule().moveToNext(event);
     }
+
+    res.add(new EndEvent(getGame(), GameEvent.CHAIN_END));
     return res;
+  }
+
+  @Override
+  public int getPrio() {
+    return GameEvent.ADDC_P;
   }
 }

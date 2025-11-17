@@ -14,7 +14,7 @@ public class ActionEvent implements GameEvent {
   private final static int PRIO = GameEvent.ACT_P;
 
   private Game game;
-  public CompletableFuture<PlayerAction> playerAction;
+  public CompletableFuture<PlayerAction> playerAction = new CompletableFuture<>();
   public PlayerAction action;
 
   public ActionEvent(Game game) {
@@ -46,13 +46,18 @@ public class ActionEvent implements GameEvent {
     return;
   }
 
-  public void submitAction(PlayerAction action) {
+  public synchronized void submitAction(PlayerAction action) {
+    if (this.action != null) {
+      return;
+    }
+
     playerAction.complete(action);
   }
 
   private void processAction() {
-    if (playerAction == null) {
+    if (action == null) {
       game.drawAction();
+      return;
     }
 
     switch (action.getActionType()) {

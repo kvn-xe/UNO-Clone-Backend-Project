@@ -69,9 +69,28 @@ public class TestHelper {
     testGame.waitTillTurnFin();
   }
 
+  public void waitTillTurnReady() {
+    testGame.waitTillTurnReady();
+  }
+
+  public void waitTillTurnReady(int turnNum) {
+    testGame.waitTillTurnReady(turnNum);
+  }
+
+  public void waitTillTurnFin(int turnNum) {
+    testGame.waitTillTurnFin(turnNum);
+  }
+
   public JSONObject createAction(String playerId, String actionType, Card card) {
     JSONObject res = new JSONObject();
     res.put(GameController.ACTION_KEY, new PlayerAction(actionType, card).getJSON());
+    res.put(GameController.PLAYER_ID_KEY, playerId);
+    return res;
+  }
+
+  public JSONObject createAction(String playerId, String actionType) {
+    JSONObject res = new JSONObject();
+    res.put(GameController.ACTION_KEY, new PlayerAction(actionType, null).getJSON());
     res.put(GameController.PLAYER_ID_KEY, playerId);
     return res;
   }

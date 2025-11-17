@@ -41,9 +41,14 @@ public class Game {
   private EventFactory eventFactory = null;
   private Turn turnManager = null;
   private EventLoop loop;
+  private ExecutorService eventExecutor = Executors.newSingleThreadExecutor();
   private CompletableFuture<Void> ready = new CompletableFuture<>();
-  private CompletableFuture<Void> turnFin = new CompletableFuture<>();
+  private volatile CompletableFuture<Void> turnFin = new CompletableFuture<>();
+  private final Object turnLock = new Object();
+  private final Object readyLock = new Object();
   private int maxTurns;
+
+  private volatile int completedTurns = 0;
 
   public Game() {
     this(MAX_TURNS);
@@ -96,12 +101,12 @@ public class Game {
     pile.init(deck);
   }
 
-  public synchronized void start() {
+  public void start() {
     if (!(gameState instanceof GameStart)) {
       return;
     }
     ((GameStart) gameState).start();
-    
+
     while (!(gameState instanceof GameEnd)) {
       if (turnManager.getTurnNum() == maxTurns) {
         break;
@@ -111,13 +116,16 @@ public class Game {
       if (!ready.isDone()) {
         ready.complete(null);
       }
-      
-      ExecutorService executor = Executors.newSingleThreadExecutor();
-      Future<?> eventThread = executor.submit(loop);
+
+      Future<?> eventThread = eventExecutor.submit(loop);
+      synchronized (readyLock) {
+        readyLock.notifyAll();
+      }
 
       try {
         eventThread.get(PLAYER_TIMEOUT, TimeUnit.SECONDS);
       } catch (TimeoutException e) {
+        System.out.println("Timeout");
         eventThread.cancel(true);
       } catch (InterruptedException e) {
         System.err.println("Turn Interrupted");
@@ -125,20 +133,67 @@ public class Game {
         e.printStackTrace();
       }
 
-      turnFin.complete(null);
-      scheduler.cycleEvents();
+      scheduler.cycleEvents(this);
       turnManager.nextTurn();
+      synchronized (turnLock) {
+        completedTurns++;     
+        turnLock.notifyAll();
+      }
     }
 
     endGame();
   }
 
-  public void waitTillTurnFin() {
+  public void waitTillTurnReady(int turnNum) {
     try {
-      turnFin.get();
-      turnFin = new CompletableFuture<>();
+      while (loop == null || loop.getTurnNum() < turnNum) {
+        synchronized (readyLock) {
+          readyLock.wait();
+        }
+      } 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  public void waitTillTurnReady() {
+    int turnNumRunning = loop.getTurnNum();
+    try {
+      while (loop == null || turnNumRunning > completedTurns) {
+        synchronized (readyLock) {
+          readyLock.wait();
+        }
+      } 
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void waitTillTurn(int turnNum) {
+    synchronized (turnLock) {
+      // Completed Turns start at 1, turnNum is 0-indexed
+      while (completedTurns <= turnNum) {
+        try {
+          turnLock.wait();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return;
+        }
+      }
+    }
+  }
+
+  public void waitTillTurnFin() {
+    waitTillTurn(turnManager.getTurnNum());
+  }
+
+  public void waitTillTurnFin(int turnNum) {
+    waitTillTurn(turnNum);
+  }
+
+  public CompletableFuture<Void> getNextTurnFin() {
+    synchronized (turnLock) {
+      return turnFin;
     }
   }
 
@@ -155,6 +210,7 @@ public class Game {
 
   public void endGame() {
     gameState.endGame();
+    cleanup();
   }
 
   public EventFactory getEventFactory() {
@@ -224,7 +280,7 @@ public class Game {
     if (!turnManager.getActivePlayer().getId().equals(playerId)) {
       return;
     }
-    addCurrentEvent(eventFactory.createEvent(action));
+    loop.submitAction(action);
   }
 
   public void addCurrentEvent(GameEvent event) {
@@ -249,5 +305,9 @@ public class Game {
 
   public void addUniversalEvent(GameEvent event) {
     scheduler.addUniversalEvent(event);
+  }
+
+  public void cleanup() {
+    eventExecutor.shutdown();
   }
 }

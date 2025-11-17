@@ -39,8 +39,11 @@ public class EventFactory {
       case Card.SKIP:
         event = new SkipCardEvent(game, card, game.getDiscard(), game.getActivePlayer());
         break;
-      default:
+      case Card.NUMBER:
         event = new CardEvent(game, card, game.getDiscard(), game.getActivePlayer());
+        break;
+      default:
+        break;
     }
 
     return event;

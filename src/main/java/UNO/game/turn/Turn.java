@@ -9,7 +9,7 @@ import UNO.game.user.Player;
 
 public class Turn {
 
-  private int turnNum = 0;
+  private volatile int turnNum = 0;
   private int turn = 0;
   private boolean skip = false;
 

@@ -1,5 +1,6 @@
 package UNO.game.game.Events;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import UNO.game.game.Game;
@@ -15,7 +16,10 @@ public class AddInteractableEvent extends AddEvent {
 
   @Override
   public List<GameEvent> play() {
-    return super.play();
+    getGame().getActivePlayer().draw(getVal());
+    List<GameEvent> res = new ArrayList<>();
+    res.add(getGame().getEventFactory().createEvent(GameEvent.FORCED_END));
+    return res;
   }
 
   @Override

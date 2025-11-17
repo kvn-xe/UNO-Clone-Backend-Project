@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
 
-import UNO.game.game.Events.EndEvent;
+import UNO.game.game.Events.ActionEvent;
 import UNO.game.game.Events.GameEvent;
 
 public class EventScheduler {
@@ -24,18 +24,18 @@ public class EventScheduler {
   };
 
   public EventScheduler(Game game) {
-    currentEvents.add(new EndEvent(game));
+    currentEvents.add(new ActionEvent(game));
   }
 
   public synchronized GameEvent waitForNextEvent() {
-    try {
-      hasEvents.get();
-      if (currentEvents.size() == 1) {
-        hasEvents = new CompletableFuture<>();
-      }
+    if (currentEvents.size() == 0) {
+      hasEvents = new CompletableFuture<>();
 
-    } catch (Exception e) {
-      e.printStackTrace();
+      try {
+        hasEvents.get();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     return currentEvents.poll();
@@ -68,8 +68,9 @@ public class EventScheduler {
     universalEvents.add(event);
   }
 
-  public void cycleEvents() {
+  public void cycleEvents(Game game) {
     currentEvents = nextEvents;
+    currentEvents.add(new ActionEvent(game));
     nextEvents = new PriorityQueue<>(EVENT_CMP);
   }
 

@@ -15,7 +15,9 @@ public class EndEvent implements GameEvent {
   public EndEvent(Game game, String type) {
     if (type.equals(GameEvent.FORCED_END)) {
       prio = GameEvent.ENDF_P;
-    } else {
+    } else if (type.equals(GameEvent.CHAIN_END)) {
+      prio = GameEvent.ENDC_P;
+    }else {
       prio = PRIO;
     }
   }

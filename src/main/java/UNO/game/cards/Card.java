@@ -11,7 +11,8 @@ public class Card {
   public final static String REVERSE = "reverse";
   public final static String CHANGE = "change";
 
-  public final static List<String> COLORS = List.of("red", "blue", "yellow", "green", "any");
+  public final static List<String> COLORS = List.of("red", "blue", "yellow", "green");
+  public final static String ANY_COLOR = "any";
   public final static List<String> TYPES = List.of("number", "skip", "add", "reverse");
   public final static List<String> SPECIAL = List.of("add", "change");
 
